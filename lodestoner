@@ -45,7 +45,7 @@ if __name__ == '__main__':
             ret = s.scrape_topics()
 
         if ret:
-            print json.dumps(ret, indent=4)
+            print(json.dumps(ret, indent=4))
 
     except DoesNotExist:
-            print "Could not find character"
+            print("Could not find character")

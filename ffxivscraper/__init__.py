@@ -25,8 +25,8 @@ def strip_tags(html, invalid_tags):
 
             for c in tag.contents:
                 if not isinstance(c, bs4.NavigableString):
-                    c = strip_tags(unicode(c), invalid_tags)
-                s += unicode(c)
+                    c = strip_tags(str(c), invalid_tags)
+                s += str(c)
 
             tag.replaceWith(s)
 
@@ -65,19 +65,21 @@ class FFXIvScraper(Scraper):
 
         news = []
         soup = bs4.BeautifulSoup(r.content)
-        for tag in soup.select('.topics_list li'):
+        for tag in soup.select('.news__content__list__topics li'):
             entry = {}
-            title_tag = tag.select('.topics_list_inner a')[0]
+            title_tag = tag.select('.ic_topics a')[0]
             script = str(tag.select('script')[0])
             entry['timestamp'] = int(re.findall(r"1[0-9]{9},", script)[0].rstrip(','))
             entry['link'] = '//' + self.lodestone_domain + title_tag['href']
             entry['id'] = entry['link'].split('/')[-1]
-            entry['title'] = title_tag.string.encode('utf-8').strip()
-            body = tag.select('.area_inner_cont')[0]
+            entry['title'] = title_tag.string.strip()
+            body = tag.select('.news__content__list__topics--body')[0]
             for a in body.findAll('a'):
                 if a['href'].startswith('/'):
                     a['href'] = '//' + self.lodestone_domain + a['href']
-            entry['body'] = body.encode('utf-8').strip()
+            print(type(body))
+            #entry['body'] = body.encode('utf-8').strip()
+            entry['body'] = ""
             entry['lang'] = 'en'
             news.append(entry)
         return news
@@ -126,8 +128,8 @@ class FFXIvScraper(Scraper):
         page_server = page_server.strip()[1:-1]
 
         if page_name != character_name or page_server != server_name:
-            print "%s %s" % (page_name, page_server)
-            print "Name mismatch"
+            print("%s %s" % (page_name, page_server))
+            print("Name mismatch")
             return False
 
         return lodestone_id if soup.select('.txt_selfintroduction')[0].text.strip() == verification_code else False
@@ -349,7 +351,7 @@ class FFXIvScraper(Scraper):
         url = self.lodestone_url + '/freecompany/%s/' % lodestone_id
         html = self.make_request(url).content
 
-        if 'The page you are searching for has either been removed,' in html:
+        if 'The page you are searching for has either been removed,' in str(html):
             raise DoesNotExist()
 
         soup = bs4.BeautifulSoup(html)
@@ -368,7 +370,7 @@ class FFXIvScraper(Scraper):
             formed = None
 
         slogan = soup.find(text='Company Slogan').parent.parent.select('td')[0].contents
-        slogan = ''.join(x.encode('utf-8').strip().replace('<br/>', '\n') for x in slogan) if slogan else ""
+        slogan = ''.join(x.strip().replace('<br/>', '\n') for x in slogan) if slogan else ""
 
         active = soup.find(text='Active').parent.parent.select('td')[0].text.strip()
         recruitment = soup.find(text='Recruitment').parent.parent.select('td')[0].text.strip()
@@ -396,7 +398,7 @@ class FFXIvScraper(Scraper):
             estate['address'] = estate_block.select('p.mb10')[0].text
 
             greeting = estate_block.select('p.mb10')[1].contents
-            estate['greeting'] = ''.join(x.encode('utf-8').strip().replace('<br/>', '\n') for x in greeting) if greeting else ""
+            estate['greeting'] = ''.join(x.strip().replace('<br/>', '\n') for x in greeting) if greeting else ""
         else:
             estate = None
 
@@ -404,7 +406,7 @@ class FFXIvScraper(Scraper):
 
         html = self.make_request(url).content
 
-        if 'The page you are searching for has either been removed,' in html:
+        if 'The page you are searching for has either been removed,' in str(html):
             raise DoesNotExist()
 
         soup = bs4.BeautifulSoup(html)
@@ -453,7 +455,7 @@ class FFXIvScraper(Scraper):
 
         if pages > 1:
             pool = Pool(5)
-            for page in xrange(2, pages + 1):
+            for page in range(2, pages + 1):
                 pool.spawn(populate_roster, page)
             pool.join()
 
