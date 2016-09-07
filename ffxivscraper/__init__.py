@@ -77,8 +77,7 @@ class FFXIvScraper(Scraper):
             for a in body.findAll('a'):
                 if a['href'].startswith('/'):
                     a['href'] = '//' + self.lodestone_domain + a['href']
-            print(type(body))
-            #entry['body'] = body.encode('utf-8').strip()
+            #entry['body'] = body.contents[0] #broken
             entry['body'] = ""
             entry['lang'] = 'en'
             news.append(entry)
